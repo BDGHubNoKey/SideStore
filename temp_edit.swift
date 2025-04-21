@@ -1,4 +1,8 @@
-func enableJIT(for installedApp: InstalledApp) {
+// This is a temporary file for editing the enableJIT function
+// The function should be part of a class or extension, not standalone
+
+extension MyAppsViewController {
+    func enableJIT(for installedApp: InstalledApp) {
         // Check if JIT API URL is configured
         let jitAPIURL = UserDefaults.standard.string(forKey: "jit_api_base_url")
         
@@ -24,3 +28,4 @@ func enableJIT(for installedApp: InstalledApp) {
             }
         }
     }
+}
