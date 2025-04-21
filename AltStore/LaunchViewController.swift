@@ -89,7 +89,12 @@ final class LaunchViewController: RSTLaunchViewController, UIDocumentPickerDeleg
         #if !targetEnvironment(simulator)
         
         guard let pf = fetchPairingFile() else {
-            displayError("Device pairing file not found.")
+            // If user has chosen to skip pairing file, continue without error
+            if UserDefaults.standard.skipPairingFile {
+                finishLaunching()
+            } else {
+                displayError("Device pairing file not found.")
+            }
             return
         }
         start_minimuxer_threads(pf)
@@ -137,6 +142,11 @@ final class LaunchViewController: RSTLaunchViewController, UIDocumentPickerDeleg
     }
     
     func fetchPairingFile() -> String? {
+        // If user has chosen to skip pairing file, return nil
+        if UserDefaults.standard.skipPairingFile {
+            return nil
+        }
+        
         let filename = "ALTPairingFile.mobiledevicepairing"
         let fm = FileManager.default
         let documentsPath = fm.documentsDirectory.appendingPathComponent("/\(filename)")
@@ -158,10 +168,10 @@ final class LaunchViewController: RSTLaunchViewController, UIDocumentPickerDeleg
         } else {
             // Show an alert explaining the pairing file
             // Create new Alert
-            let dialogMessage = UIAlertController(title: "Pairing File", message: "Select the pairing file or select \"Help\" for help.", preferredStyle: .alert)
+            let dialogMessage = UIAlertController(title: "Pairing File", message: "Select the pairing file or select \"Skip\" to use the app without a pairing file.", preferredStyle: .alert)
             
             // Create OK button with action handler
-            let ok = UIAlertAction(title: "OK", style: .default, handler: { (action) -> Void in
+            let ok = UIAlertAction(title: "Select File", style: .default, handler: { (action) -> Void in
                 // Try to load it from a file picker
                 var types = UTType.types(tag: "plist", tagClass: UTTagClass.filenameExtension, conformingTo: nil)
                 types.append(contentsOf: UTType.types(tag: "mobiledevicepairing", tagClass: UTTagClass.filenameExtension, conformingTo: UTType.data))
@@ -172,6 +182,16 @@ final class LaunchViewController: RSTLaunchViewController, UIDocumentPickerDeleg
                 self.present(documentPickerController, animated: true, completion: nil)
                 UserDefaults.standard.isPairingReset = false
              })
+            
+            // Add Skip button to allow using the app without a pairing file
+            let skipAction = UIAlertAction(title: "Skip", style: .default) { (action) in
+                // Set the flag to skip pairing file in the future
+                UserDefaults.standard.skipPairingFile = true
+                UserDefaults.standard.isPairingReset = false
+                
+                // Continue with app launch
+                self.finishLaunching()
+            }
             
             //Add "help" button to take user to wiki
             let wikiOption = UIAlertAction(title: "Help", style: .default) { (action) in
@@ -185,6 +205,7 @@ final class LaunchViewController: RSTLaunchViewController, UIDocumentPickerDeleg
             
             //Add buttons to dialog message
             dialogMessage.addAction(wikiOption)
+            dialogMessage.addAction(skipAction)
             dialogMessage.addAction(ok)
 
             // Present Alert to
@@ -205,6 +226,23 @@ final class LaunchViewController: RSTLaunchViewController, UIDocumentPickerDeleg
         print(msg)
         // Create a new alert
         let dialogMessage = UIAlertController(title: "Error launching SideStore", message: msg, preferredStyle: .alert)
+        
+        // Add option to continue without pairing file
+        let continueAction = UIAlertAction(title: "Continue Without Pairing File", style: .default) { (action) -> Void in
+            // Set the flag to skip pairing file in the future
+            UserDefaults.standard.skipPairingFile = true
+            UserDefaults.standard.isPairingReset = false
+            
+            // Continue with app launch
+            self.finishLaunching()
+        }
+        
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel) { _ in
+            exit(0)
+        }
+        
+        dialogMessage.addAction(continueAction)
+        dialogMessage.addAction(cancelAction)
 
         // Present alert to user
         self.present(dialogMessage, animated: true, completion: nil)
@@ -239,7 +277,28 @@ final class LaunchViewController: RSTLaunchViewController, UIDocumentPickerDeleg
     }
     
     func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
-        displayError("Choosing a pairing file was cancelled. Please re-open the app and try again.")
+        // Instead of showing an error, offer to continue without a pairing file
+        let dialogMessage = UIAlertController(title: "No Pairing File Selected", 
+                                             message: "Would you like to continue without a pairing file?", 
+                                             preferredStyle: .alert)
+        
+        let continueAction = UIAlertAction(title: "Continue Without Pairing File", style: .default) { (action) -> Void in
+            // Set the flag to skip pairing file in the future
+            UserDefaults.standard.skipPairingFile = true
+            UserDefaults.standard.isPairingReset = false
+            
+            // Continue with app launch
+            self.finishLaunching()
+        }
+        
+        let cancelAction = UIAlertAction(title: "Exit App", style: .cancel) { _ in
+            exit(0)
+        }
+        
+        dialogMessage.addAction(continueAction)
+        dialogMessage.addAction(cancelAction)
+        
+        self.present(dialogMessage, animated: true, completion: nil)
     }
     
     func start_minimuxer_threads(_ pairing_file: String) {

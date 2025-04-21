@@ -92,6 +92,175 @@ extension SettingsViewController
         case recreateDatabase
         case minimuxerConsoleLogging
     }
+
+    enum SettingsGroup: Int, CaseIterable
+    {
+        case general
+        case advanced
+        case techyThings
+        case about
+        
+        var title: String
+        {
+            switch self
+            {
+            case .general: return NSLocalizedString("General", comment: "")
+            case .advanced: return NSLocalizedString("Advanced", comment: "")
+            case .techyThings: return NSLocalizedString("Techy Things", comment: "")
+            case .about: return NSLocalizedString("About", comment: "")
+            }
+        }
+        
+        var items: [SettingsItem]
+        {
+            switch self
+            {
+            case .general:
+                var items: [SettingsItem] = [.backgroundRefresh, .disableIdleTimeout, .appSorting]
+                
+                if ProcessInfo.processInfo.sparseRestorePatched
+                {
+                    items.append(.disableAppLimit)
+                }
+                
+                return items
+                
+            case .advanced:
+                var items: [SettingsItem] = [.exportResignedApp, .recreateDatabase]
+                
+                if UserDefaults.standard.isDebugModeEnabled
+                {
+                    items.append(.verboseOperationsLogging)
+                    items.append(.minimuxerConsoleLogging)
+                    items.append(.minimuxerStatusCheck)
+                }
+                
+                return items
+                
+            case .techyThings:
+                var items: [SettingsItem] = [.resetPairingFile, .toggleSkipPairingFile]
+                
+                if #available(iOS 17, *) {
+                    items.append(.sideJITServer)
+                }
+                
+                items.append(.anisetteServers)
+                items.append(.jitAPISettings)
+                
+                return items
+                
+            case .about:
+                return [.version, .website, .twitter, .discord, .github, .acknowledgements]
+            }
+        }
+    }
+
+    enum SettingsItem: Equatable
+    {
+        case backgroundRefresh
+        case disableIdleTimeout
+        case disableAppLimit
+        case appSorting
+        
+        case exportResignedApp
+        case recreateDatabase
+        case verboseOperationsLogging
+        case minimuxerConsoleLogging
+        case minimuxerStatusCheck
+        
+        case resetPairingFile
+        case toggleSkipPairingFile
+        case sideJITServer
+        case anisetteServers
+        case jitAPISettings
+        
+        case version
+        case website
+        case twitter
+        case discord
+        case github
+        case acknowledgements
+        
+        var title: String
+        {
+            switch self
+            {
+            case .backgroundRefresh: return NSLocalizedString("Background Refresh", comment: "")
+            case .disableIdleTimeout: return NSLocalizedString("Disable Idle Timeout", comment: "")
+            case .disableAppLimit: return NSLocalizedString("Disable App Limit", comment: "")
+            case .appSorting: return NSLocalizedString("App Sorting", comment: "")
+                
+            case .exportResignedApp: return NSLocalizedString("Export Resigned Apps", comment: "")
+            case .recreateDatabase: return NSLocalizedString("Recreate Database", comment: "")
+            case .verboseOperationsLogging: return NSLocalizedString("Verbose Operations Logging", comment: "")
+            case .minimuxerConsoleLogging: return NSLocalizedString("Minimuxer Console Logging", comment: "")
+            case .minimuxerStatusCheck: return NSLocalizedString("Minimuxer Status Check", comment: "")
+                
+            case .resetPairingFile: return NSLocalizedString("Reset Pairing File", comment: "")
+            case .toggleSkipPairingFile: return NSLocalizedString("Toggle Skip Pairing File", comment: "")
+            case .sideJITServer: return NSLocalizedString("SideJITServer", comment: "")
+            case .anisetteServers: return NSLocalizedString("Anisette Servers", comment: "")
+            case .jitAPISettings: return NSLocalizedString("JIT API Settings", comment: "")
+                
+            case .version: return NSLocalizedString("Version", comment: "")
+            case .website: return NSLocalizedString("Website", comment: "")
+            case .twitter: return NSLocalizedString("Twitter", comment: "")
+            case .discord: return NSLocalizedString("Discord", comment: "")
+            case .github: return NSLocalizedString("GitHub", comment: "")
+            case .acknowledgements: return NSLocalizedString("Acknowledgements", comment: "")
+            }
+        }
+        
+        var accessoryType: UITableViewCell.AccessoryType
+        {
+            switch self
+            {
+            case .backgroundRefresh, .disableIdleTimeout, .disableAppLimit, .exportResignedApp, .verboseOperationsLogging, .minimuxerConsoleLogging, .minimuxerStatusCheck, .sideJITServer: return .none
+            default: return .disclosureIndicator
+            }
+        }
+        
+        var isToggle: Bool
+        {
+            switch self
+            {
+            case .backgroundRefresh, .disableIdleTimeout, .disableAppLimit, .exportResignedApp, .verboseOperationsLogging, .minimuxerConsoleLogging, .minimuxerStatusCheck, .sideJITServer: return true
+            default: return false
+            }
+        }
+        
+        var isOn: Bool
+        {
+            switch self
+            {
+            case .backgroundRefresh: return UserDefaults.standard.isBackgroundRefreshEnabled
+            case .disableIdleTimeout: return UserDefaults.standard.isIdleTimeoutDisableEnabled
+            case .disableAppLimit: return UserDefaults.standard.isAppLimitDisabled
+            case .exportResignedApp: return UserDefaults.standard.isExportResignedAppEnabled
+            case .verboseOperationsLogging: return UserDefaults.standard.isVerboseOperationsLoggingEnabled
+            case .minimuxerConsoleLogging: return UserDefaults.standard.isMinimuxerConsoleLoggingEnabled
+            case .minimuxerStatusCheck: return UserDefaults.standard.isMinimuxerStatusCheckEnabled
+            case .sideJITServer: return UserDefaults.standard.sidejitenable
+            default: return false
+            }
+        }
+        
+        func updateIsOn(_ isOn: Bool)
+        {
+            switch self
+            {
+            case .backgroundRefresh: UserDefaults.standard.isBackgroundRefreshEnabled = isOn
+            case .disableIdleTimeout: UserDefaults.standard.isIdleTimeoutDisableEnabled = isOn
+            case .disableAppLimit: UserDefaults.standard.isAppLimitDisabled = isOn
+            case .exportResignedApp: UserDefaults.standard.isExportResignedAppEnabled = isOn
+            case .verboseOperationsLogging: UserDefaults.standard.isVerboseOperationsLoggingEnabled = isOn
+            case .minimuxerConsoleLogging: UserDefaults.standard.isMinimuxerConsoleLoggingEnabled = isOn
+            case .minimuxerStatusCheck: UserDefaults.standard.isMinimuxerStatusCheckEnabled = isOn
+            case .sideJITServer: UserDefaults.standard.sidejitenable = isOn
+            default: break
+            }
+        }
+    }
 }
 
 final class SettingsViewController: UITableViewController
@@ -1193,14 +1362,40 @@ extension SettingsViewController
 
                 self.prepare(for: UIStoryboardSegue(identifier: "anisetteServers", source: self, destination: anisetteServersController), sender: nil)
                 
-//            case .hiddenSettings:
-//                // Create the URL that deep links to your app's custom settings.
-//                if let url = URL(string: UIApplication.openSettingsURLString) {
-//                    // Ask the system to open that URL.
-//                    UIApplication.shared.open(url)
-//                } else {
-//                    ELOG("UIApplication.openSettingsURLString invalid")
-//                }
+            case .toggleSkipPairingFile:
+                let isSkippingPairingFile = UserDefaults.standard.skipPairingFile
+                let alertController = UIAlertController(
+                    title: isSkippingPairingFile ? NSLocalizedString("Enable Pairing File Requirement", comment: "") : NSLocalizedString("Skip Pairing File", comment: ""),
+                    message: isSkippingPairingFile ? NSLocalizedString("This will require a pairing file on next app launch.", comment: "") : NSLocalizedString("This will allow the app to run without a pairing file on next launch.", comment: ""),
+                    preferredStyle: UIAlertController.Style.actionSheet)
+                
+                let actionTitle = isSkippingPairingFile ? NSLocalizedString("Enable Requirement", comment: "") : NSLocalizedString("Skip Pairing File", comment: "")
+                
+                alertController.addAction(UIAlertAction(title: actionTitle, style: .default){ _ in
+                    // Toggle the skipPairingFile setting
+                    UserDefaults.standard.skipPairingFile = !isSkippingPairingFile
+                    
+                    // Show confirmation toast
+                    let message = isSkippingPairingFile ? 
+                        NSLocalizedString("Pairing file will be required on next launch", comment: "") : 
+                        NSLocalizedString("Pairing file will be skipped on next launch", comment: "")
+                    
+                    let toast = ToastView(text: message)
+                    toast.tintColor = .altPrimary
+                    toast.show(in: self)
+                    
+                    self.tableView.deselectRow(at: indexPath, animated: true)
+                })
+                
+                alertController.addAction(.cancel)
+                
+                //Fix crash on iPad
+                alertController.popoverPresentationController?.sourceView = self.tableView
+                alertController.popoverPresentationController?.sourceRect = self.tableView.rectForRow(at: indexPath)
+                
+                self.present(alertController, animated: true)
+                self.tableView.deselectRow(at: indexPath, animated: true)
+                
             case .refreshAttempts, .betaUpdates, .betaTrack: break
 
             }
