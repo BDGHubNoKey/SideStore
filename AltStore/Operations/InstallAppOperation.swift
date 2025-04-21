@@ -14,7 +14,7 @@ import Roxas
 import minimuxer
 
 @objc(InstallAppOperation)
-final class InstallAppOperation: ResultOperation<InstalledApp>
+final class InstallAppOperation: ResultOperation<InstalledApp>, @unchecked Sendable
 {
     let context: InstallAppOperationContext
     

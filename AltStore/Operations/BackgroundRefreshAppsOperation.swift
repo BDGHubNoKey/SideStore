@@ -52,7 +52,7 @@ private let ReceivedApplicationState: @convention(c) (CFNotificationCenter?, Uns
 }
 
 @objc(BackgroundRefreshAppsOperation)
-final class BackgroundRefreshAppsOperation: ResultOperation<[String: Result<InstalledApp, Error>]>
+final class BackgroundRefreshAppsOperation: ResultOperation<[String: Result<InstalledApp, Error>]>, @unchecked Sendable
 {
     let installedApps: [InstalledApp]
     private let managedObjectContext: NSManagedObjectContext
