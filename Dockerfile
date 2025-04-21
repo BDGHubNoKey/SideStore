@@ -8,12 +8,16 @@ RUN apt-get update && apt-get install -y \
     libssl-dev \
     libffi-dev \
     python3-dev \
+    git \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install dependencies
 COPY flask_backend/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+
+# Install pymobiledevice3 directly from GitHub to ensure we get the latest version with all modules
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir git+https://github.com/doronz88/pymobiledevice3.git
 
 # Copy application code
 COPY flask_backend/ .
