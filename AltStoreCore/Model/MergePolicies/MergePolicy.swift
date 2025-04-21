@@ -92,12 +92,6 @@ extension MergeError: _ObjectiveCBridgeableError
             ALTSourceLineErrorKey: self.sourceLine,
         ]
         
-        userInfo["appName"] = self.appName
-        userInfo["appBundleID"] = self.appBundleID
-        userInfo["sourceID"] = self.sourceID
-        
-        return userInfo.compactMapValues { $0 }
-    }
     
     public init?(_bridgedNSError error: NSError)
     {
@@ -128,9 +122,6 @@ private extension Error
         return error
     }
 }
-
-
-
 
 open class MergePolicy: RSTRelationshipPreservingMergePolicy
 {
@@ -163,7 +154,6 @@ open class MergePolicy: RSTRelationshipPreservingMergePolicy
         try self.performPostMergeValidationAndCorrections(for: conflicts)
     }
 }
-
 
 extension MergePolicy{
     
@@ -341,7 +331,6 @@ extension MergePolicy{
         
     }
 }
-
 
 extension MergePolicy{
 

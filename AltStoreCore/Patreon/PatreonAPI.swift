@@ -526,3 +526,4 @@ extension PatreonAPI: WKUIDelegate
         self.webViewController?.navigationController?.popToRootViewController(animated: true)
     }
 }
+}

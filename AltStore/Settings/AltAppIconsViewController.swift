@@ -27,8 +27,6 @@ private final class AltIcon: Decodable
     
     private enum CodingKeys: String, CodingKey
     {
-        case name
-        case imageName
     }
     
     required init(from decoder: Decoder) throws
