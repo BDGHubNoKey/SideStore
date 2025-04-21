@@ -1480,24 +1480,7 @@ private extension MyAppsViewController
         }
     }
     
-    func enableJIT(for installedApp: InstalledApp) {
-        let sidejitenabled = UserDefaults.standard.sidejitenable
-        
-        if #unavailable(iOS 17), !sidejitenabled {
-            guard minimuxerStatus else { return }
-        }
-        
-        AppManager.shared.enableJIT(for: installedApp) { result in
-            DispatchQueue.main.async {
-                switch result {
-                case .success:
-                    break
-                case .failure(let error):
-                    ToastView(error: error, opensLog: true).show(in: self)
-                    AppManager.shared.log(error, operation: .enableJIT, app: installedApp)
-                }
-            }
-        }
+
     }
 }
 
@@ -2519,3 +2502,29 @@ extension MyAppsViewController: UIImagePickerControllerDelegate, UINavigationCon
         self._imagePickerInstalledApp = nil
     }
 }
+func enableJIT(for installedApp: InstalledApp) {
+        // Check if JIT API URL is configured
+        let jitAPIURL = UserDefaults.standard.string(forKey: "jit_api_base_url")
+        
+        if jitAPIURL == nil {
+            // Show alert to configure JIT API URL
+            let alert = UIAlertController(title: "JIT API Not Configured", 
+                                         message: "Please configure the JIT API URL in Settings before enabling JIT.", 
+                                         preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+            self.present(alert, animated: true, completion: nil)
+            return
+        }
+        
+        AppManager.shared.enableJIT(for: installedApp) { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success:
+                    break
+                case .failure(let error):
+                    ToastView(error: error, opensLog: true).show(in: self)
+                    AppManager.shared.log(error, operation: .enableJIT, app: installedApp)
+                }
+            }
+        }
+    }

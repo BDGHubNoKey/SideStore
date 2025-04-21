@@ -8,17 +8,15 @@
 
 import UIKit
 import Combine
-import minimuxer
-import UniformTypeIdentifiers
 
 import AltStoreCore
 
-enum SideJITServerErrorType: Error {
-     case invalidURL
-     case errorConnecting
-     case deviceNotFound
-     case other(String)
- }
+enum JITEnablementError: Error {
+    case invalidURL
+    case errorConnecting
+    case deviceNotFound
+    case other(String)
+}
 
 @available(iOS 14, *)
 protocol EnableJITContext
@@ -56,93 +54,49 @@ final class EnableJITOperation<Context: EnableJITContext>: ResultOperation<Void>
         
         let userdefaults = UserDefaults.standard
         
-        if #available(iOS 17, *), userdefaults.sidejitenable {
-            let SideJITIP = userdefaults.textInputSideJITServerurl ?? "http://sidejitserver._http._tcp.local:8080"
-            installedApp.managedObjectContext?.perform {
-                enableJITSideJITServer(serverURL: URL(string: SideJITIP)!, installedApp: installedApp) { result in
-                    switch result {
-                    case .failure(let error):
-                        switch error {
-                        case .invalidURL, .errorConnecting:
-                            self.finish(.failure(OperationError.unableToConnectSideJIT))
-                        case .deviceNotFound:
-                            self.finish(.failure(OperationError.unableToRespondSideJITDevice))
-                        case .other(let message):
-                            if let startRange = message.range(of: "<p>"),
-                               let endRange = message.range(of: "</p>", range: startRange.upperBound..<message.endIndex) {
-                                let pContent = message[startRange.upperBound..<endRange.lowerBound]
-                                self.finish(.failure(OperationError.SideJITIssue(error: String(pContent))))
-                                print(message + " + " + String(pContent))
-                            } else {
-                                print(message)
-                                self.finish(.failure(OperationError.SideJITIssue(error: message)))
-                            }
-                        }
-                    case .success():
-                        self.finish(.success(()))
-                        print("JIT Enabled Successfully :3 (code made by Stossy11!)")
-                    }
-                }
-                return
-            }
-      } else {
-            installedApp.managedObjectContext?.perform {
-                var retries = 3
-                while (retries > 0){
-                    do {
-                        try debug_app(installedApp.resignedBundleIdentifier)
-                        self.finish(.success(()))
-                        retries = 0
-                    } catch {
-                        retries -= 1
-                        if (retries <= 0){
-                            self.finish(.failure(error))
-                        }
+        // Check if JIT API URL is configured
+        guard let jitAPIURL = userdefaults.string(forKey: "jit_api_base_url") else {
+            return self.finish(.failure(OperationError.invalidParameters("JIT API URL not configured. Please set it in Settings.")))
+        }
+        
+        // Set the API base URL if not already set
+        JITAPIClient.shared.setBaseURL(jitAPIURL)
+        
+        // Enable JIT using the API client
+        installedApp.managedObjectContext?.perform {
+            JITAPIClient.shared.enableJIT(for: installedApp.resignedBundleIdentifier) { result in
+                switch result {
+                case .success(let message):
+                    // Show success notification
+                    let content = UNMutableNotificationContent()
+                    content.title = "JIT Successfully Enabled"
+                    content.subtitle = "JIT Enabled For \(installedApp.name)"
+                    content.body = message
+                    content.sound = .default
+                    
+                    let request = UNNotificationRequest(identifier: "EnabledJIT", content: content, trigger: nil)
+                    UNUserNotificationCenter.current().add(request)
+                    
+                    self.finish(.success(()))
+                    print("JIT Enabled Successfully via API")
+                    
+                case .failure(let error):
+                    switch error {
+                    case .invalidURL:
+                        self.finish(.failure(OperationError.invalidParameters("Invalid JIT API URL. Please check your settings.")))
+                    case .networkError(let underlyingError):
+                        self.finish(.failure(OperationError.networkError(underlyingError)))
+                    case .serverError(let message):
+                        self.finish(.failure(OperationError.SideJITIssue(error: message)))
+                    case .authenticationError:
+                        self.finish(.failure(OperationError.authenticationFailed))
+                    case .invalidResponse:
+                        self.finish(.failure(OperationError.invalidResponse))
+                    case .unknown:
+                        self.finish(.failure(OperationError.unknown))
                     }
                 }
             }
         }
     }
-}
-
-@available(iOS 17, *)
-func enableJITSideJITServer(serverURL: URL, installedApp: InstalledApp, completion: @escaping (Result<Void, SideJITServerErrorType>) -> Void) {
-    guard let udid = fetch_udid()?.toString() else {
-        completion(.failure(.other("Unable to get UDID")))
-        return
-    }
-    
-    let serverURLWithUDID = serverURL.appendingPathComponent(udid)
-    let fullURL = serverURLWithUDID.appendingPathComponent(installedApp.resignedBundleIdentifier)
-    
-    let task = URLSession.shared.dataTask(with: fullURL) { (data, response, error) in
-        if let error = error {
-            completion(.failure(.errorConnecting))
-            return
-        }
-        
-        guard let data = data, let dataString = String(data: data, encoding: .utf8) else {
-            return
-        }
-        
-        if dataString == "Enabled JIT for '\(installedApp.name)'!" {
-            let content = UNMutableNotificationContent()
-            content.title = "JIT Successfully Enabled"
-            content.subtitle = "JIT Enabled For \(installedApp.name)"
-            content.sound = .default
-            
-            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 0.1, repeats: false)
-            let request = UNNotificationRequest(identifier: "EnabledJIT", content: content, trigger: nil)
-            UNUserNotificationCenter.current().add(request)
-            
-            completion(.success(()))
-        } else {
-            let errorType: SideJITServerErrorType = dataString == "Could not find device!"
-                ? .deviceNotFound
-                : .other(dataString)
-            completion(.failure(errorType))
-        }
-    }
-    
-    task.resume()
 }
