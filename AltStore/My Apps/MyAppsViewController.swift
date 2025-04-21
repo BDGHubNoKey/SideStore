@@ -2502,7 +2502,10 @@ extension MyAppsViewController: UIImagePickerControllerDelegate, UINavigationCon
         self._imagePickerInstalledApp = nil
     }
 }
-func enableJIT(for installedApp: InstalledApp) {
+
+extension MyAppsViewController
+{
+    func enableJIT(for installedApp: InstalledApp) {
         // Check if JIT API URL is configured
         let jitAPIURL = UserDefaults.standard.string(forKey: "jit_api_base_url")
         
@@ -2528,3 +2531,4 @@ func enableJIT(for installedApp: InstalledApp) {
             }
         }
     }
+}
