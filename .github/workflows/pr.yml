@@ -1,6 +1,6 @@
 name: Pull Request SideStore build
 on: 
-workflow_request:
+  workflow_request:
   pull_request:
     # types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
     types: [opened, synchronize, reopened, ready_for_review]
