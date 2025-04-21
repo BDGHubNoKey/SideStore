@@ -1,8 +1,5 @@
 name: Stable SideStore build
 on:
-  push:
-    tags:
-      - '[0-9]+.[0-9]+.[0-9]+' # example: 1.0.0
   workflow_dispatch:
 
 jobs:
