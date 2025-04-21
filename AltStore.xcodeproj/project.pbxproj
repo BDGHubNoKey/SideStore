@@ -2828,6 +2828,8 @@
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-SideStore/Pods-SideStore-resources.sh\"\n";
 			showEnvVarsInLog = 0;
+			alwaysOutOfDate = 0;
+			enableForSandboxing = 1;
 		};
 		99F87D0629D8B51400B40039 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -2886,6 +2888,8 @@
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
+			alwaysOutOfDate = 0;
+			enableForSandboxing = 1;
 		};
 		B0FAA6617CB97872E78D84CA /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -2908,6 +2912,8 @@
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
+			alwaysOutOfDate = 0;
+			enableForSandboxing = 1;
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -3126,7 +3132,6 @@
 				BF66EEEA2501AED0007EE018 /* UIColor+Hex.swift in Sources */,
 				BF66EECC2501AECA007EE018 /* Source.swift in Sources */,
 				BF66EED72501AECA007EE018 /* InstalledApp.swift in Sources */,
-				0EE7FDC92BE8D07400D1E390 /* NSError+AltStore.swift in Sources */,
 				D5A645232AF5B5C50047D980 /* PatreonAPI+Responses.swift in Sources */,
 				D5185B822AE1E71D00646E33 /* Source11To17MigrationPolicy.swift in Sources */,
 				BF66EECE2501AECA007EE018 /* InstalledAppPolicy.swift in Sources */,
