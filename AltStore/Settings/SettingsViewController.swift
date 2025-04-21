@@ -1561,3 +1561,4 @@ private extension SettingsViewController
         
         self.present(alertController, animated: true)
     }
+}

@@ -15,7 +15,7 @@ import AltSign
 import Roxas
 
 @objc(DownloadAppOperation)
-final class DownloadAppOperation: ResultOperation<ALTApplication>
+final class DownloadAppOperation: ResultOperation<ALTApplication>, @unchecked Sendable
 {
     @Managed
     private(set) var app: AppProtocol
@@ -77,7 +77,7 @@ final class DownloadAppOperation: ResultOperation<ALTApplication>
                     guard let latestVersion = storeApp.latestAvailableVersion else {
                         let failureReason = String(format: NSLocalizedString("The latest version of %@ could not be determined.", comment: ""), self.appName)
                         throw OperationError.unknown(failureReason: failureReason)
-        }
+                    }
 
                     // Attempt to download latest _available_ version, and fall back to older versions if necessary.
                     appVersion = latestVersion
