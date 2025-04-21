@@ -45,8 +45,6 @@ class AnisetteViewModel: ObservableObject {
                 // Update UI-related state on the main thread
                 self.servers = anisetteServers
                 print("AnisetteViewModel: Server list refresh request completed for sourceURL: \(self.source)")
-                completionHandler(.success(()))
-            } catch {
                 print("AnisetteViewModel: Server list refresh request Failed for sourceURL: \(self.source) Error: \(error)")
                 completionHandler(.failure(error))
             }

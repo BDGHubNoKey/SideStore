@@ -72,7 +72,7 @@ fileprivate struct BuildVersion: Comparable {
 
 extension ProcessInfo {
     public var shortVersion: String {
-        operatingSystemVersionString
+        return operatingSystemVersionString
             .replacingOccurrences(of: "Version ", with: "")
             .replacingOccurrences(of: "Build ", with: "")
     }
@@ -80,17 +80,25 @@ extension ProcessInfo {
     public var operatingSystemBuild: String {
         if let start = shortVersion.range(of: "(")?.upperBound,
            let end = shortVersion.range(of: ")")?.lowerBound {
-            shortVersion[start..<end].replacingOccurrences(of: "Build ", with: "")
-        } else { "???" }
+            return shortVersion[start..<end].replacingOccurrences(of: "Build ", with: "")
+        } else { 
+            return "???" 
+        }
     }
     
     public var sparseRestorePatched: Bool {
-        if operatingSystemVersion < OperatingSystemVersion(majorVersion: 18, minorVersion: 1, patchVersion: 0) { false }
-        else if operatingSystemVersion > OperatingSystemVersion(majorVersion: 18, minorVersion: 1, patchVersion: 1) { true }
+        if operatingSystemVersion < OperatingSystemVersion(majorVersion: 18, minorVersion: 1, patchVersion: 0) { 
+            return false 
+        }
+        else if operatingSystemVersion > OperatingSystemVersion(majorVersion: 18, minorVersion: 1, patchVersion: 1) { 
+            return true 
+        }
         else if operatingSystemVersion >= OperatingSystemVersion(majorVersion: 18, minorVersion: 1, patchVersion: 0),
                 let currentBuild = BuildVersion(operatingSystemBuild),
                 let targetBuild  = BuildVersion("22B5054e") {
-            currentBuild >= targetBuild
-        } else { false }
+            return currentBuild >= targetBuild
+        } else { 
+            return false 
+        }
     }
 }

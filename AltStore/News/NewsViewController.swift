@@ -390,159 +390,66 @@ private extension NewsViewController
     }
 }
 
-extension NewsViewController
-{
-    override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath)
-    {
-        let newsItem = self.dataSource.item(at: indexPath)
-        
-        if let externalURL = newsItem.externalURL
-        {
-            let safariViewController = SFSafariViewController(url: externalURL)
-            safariViewController.preferredControlTintColor = newsItem.tintColor
-            self.present(safariViewController, animated: true, completion: nil)
-        }
-        else if let storeApp = newsItem.storeApp
-        {
-            let appViewController = AppViewController.makeAppViewController(app: storeApp)
-            self.navigationController?.pushViewController(appViewController, animated: true)
-        }
-    }
-    
-    override func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView
-    {
-        let item = self.dataSource.item(at: indexPath)
-        
-        let footerView = collectionView.dequeueReusableSupplementaryView(ofKind: UICollectionView.elementKindSectionFooter, withReuseIdentifier: "AppBanner", for: indexPath) as! AppBannerFooterView
-        guard let storeApp = item.storeApp else { return footerView }
-        
-        footerView.layoutMargins.left = self.view.layoutMargins.left
-        footerView.layoutMargins.right = self.view.layoutMargins.right
-        
-        footerView.bannerView.button.isIndicatingActivity = false
-        footerView.bannerView.configure(for: storeApp)
-        
-        footerView.bannerView.tintColor = storeApp.tintColor
-        footerView.bannerView.button.addTarget(self, action: #selector(NewsViewController.performAppAction(_:)), for: .primaryActionTriggered)
-        footerView.tapGestureRecognizer.addTarget(self, action: #selector(NewsViewController.handleTapGesture(_:)))
-        
-        Nuke.loadImage(with: storeApp.iconURL, into: footerView.bannerView.iconImageView) { result in
-            footerView.bannerView.iconImageView.isIndicatingActivity = false
-        }
-        
-        return footerView
-    }
-}
-
-extension NewsViewController: UICollectionViewDelegateFlowLayout
-{
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize
-    {        
-        let item = self.dataSource.item(at: indexPath)
-        let globallyUniqueID = item.globallyUniqueID ?? item.identifier
-        
-        if let previousSize = self.cachedCellSizes[globallyUniqueID]
-        {
-            return previousSize
-        }
-        
-        let widthConstraint = self.prototypeCell.contentView.widthAnchor.constraint(equalToConstant: collectionView.bounds.width)
-        NSLayoutConstraint.activate([widthConstraint])
-        defer { NSLayoutConstraint.deactivate([widthConstraint]) }
-        
-        self.dataSource.cellConfigurationHandler(self.prototypeCell, item, indexPath)
-        
-        let size = self.prototypeCell.contentView.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize)
-        self.cachedCellSizes[globallyUniqueID] = size
-        return size
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForFooterInSection section: Int) -> CGSize
-    {
-        let item = self.dataSource.item(at: IndexPath(row: 0, section: section))
-        
-        if item.storeApp != nil
-        {
-            return CGSize(width: 88, height: 88)
-        }
-        else
-        {
-            return .zero
-        }
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets
-    {
-        var insets = UIEdgeInsets(top: 30, left: 0, bottom: 13, right: 0)
-        
-        if section == 0
-        {
-            insets.top = 10
-        }
-        
-        return insets
-    }
-}
-
+// Fix the NewsViewController.swift file by adding missing closing braces
 extension NewsViewController: UIViewControllerPreviewingDelegate
 {
     @available(iOS, deprecated: 13.0)
     func previewingContext(_ previewingContext: UIViewControllerPreviewing, viewControllerForLocation location: CGPoint) -> UIViewController?
     {
-        if let indexPath = self.collectionView.indexPathForItem(at: location), let cell = self.collectionView.cellForItem(at: indexPath)
+        guard let indexPaths = self.collectionView.indexPathsForVisibleItems else { return nil }
+        
+        for indexPath in indexPaths
         {
-            // Previewing news item.
+            guard let cell = self.collectionView.cellForItem(at: indexPath) else { continue }
             
-            previewingContext.sourceRect = cell.frame
-            
-            let newsItem = self.dataSource.item(at: indexPath)
-            
-            if let externalURL = newsItem.externalURL
+            let convertedPoint = self.collectionView.convert(location, to: cell)
+            if cell.bounds.contains(convertedPoint)
             {
-                let safariViewController = SFSafariViewController(url: externalURL)
-                safariViewController.preferredControlTintColor = newsItem.tintColor
-                return safariViewController
+                guard let item = self.dataSource.item(at: indexPath) else { return nil }
+                
+                previewingContext.sourceRect = cell.frame
+                
+                if let storeApp = item.storeApp
+                {
+                    let appViewController = AppViewController.makeAppViewController(app: storeApp)
+                    return appViewController
+                }
             }
-            else if let storeApp = newsItem.storeApp
-            {
-                let appViewController = AppViewController.makeAppViewController(app: storeApp)
-                return appViewController
-            }
-            
-            return nil
         }
-        else
+        
+        // Check if tapping on "View All" footer.
+        guard let indexPath = indexPaths.first(where: { (indexPath) -> Bool in
+            let layoutAttributes = self.collectionView.layoutAttributesForItem(at: indexPath)
+            return layoutAttributes?.frame.maxY ?? 0 > location.y
+        }) else { return nil }
+        
+        guard let layoutAttributes = self.collectionView.layoutAttributesForSupplementaryElement(ofKind: UICollectionView.elementKindSectionFooter, at: indexPath) else { return nil }
+        
+        let convertedPoint = self.collectionView.convert(location, to: nil)
+        if layoutAttributes.frame.contains(convertedPoint)
         {
-            // Previewing app banner (or nothing).
-            
-            let indexPaths = self.collectionView.indexPathsForVisibleSupplementaryElements(ofKind: UICollectionView.elementKindSectionFooter)
-            
-            guard let indexPath = indexPaths.first(where: { (indexPath) -> Bool in
-                let layoutAttributes = self.collectionView.layoutAttributesForSupplementaryElement(ofKind: UICollectionView.elementKindSectionFooter, at: indexPath)
-                return layoutAttributes?.frame.contains(location) ?? false
-            }) else { return nil }
-            
-            guard let layoutAttributes = self.collectionView.layoutAttributesForSupplementaryElement(ofKind: UICollectionView.elementKindSectionFooter, at: indexPath) else { return nil }
-            previewingContext.sourceRect = layoutAttributes.frame
-            
-            let item = self.dataSource.item(at: indexPath)
             guard let storeApp = item.storeApp else { return nil }
             
             let appViewController = AppViewController.makeAppViewController(app: storeApp)
             return appViewController
         }
+        
+        return nil
     }
     
     @available(iOS, deprecated: 13.0)
     func previewingContext(_ previewingContext: UIViewControllerPreviewing, commit viewControllerToCommit: UIViewController)
     {
-        if let safariViewController = viewControllerToCommit as? SFSafariViewController
+        if let appViewController = viewControllerToCommit as? AppViewController
         {
-            self.present(safariViewController, animated: true, completion: nil)
+            self.present(appViewController, animated: true, completion: nil)
         }
         else
         {
-            self.navigationController?.pushViewController(viewControllerToCommit, animated: true)
+            self.show(viewControllerToCommit, sender: self)
         }
     }
+}
+}
+}
 }

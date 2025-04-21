@@ -282,3 +282,4 @@ struct SettingsView_Previews: PreviewProvider {
         OperationsLoggingControlView()
     }
 }
+}

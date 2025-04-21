@@ -75,7 +75,6 @@ final class LaunchViewController: RSTLaunchViewController, UIDocumentPickerDeleg
                     }
                 }
             }
-        }
         
         if #available(iOS 17, *), UserDefaults.standard.sidejitenable {
             DispatchQueue.global().async {
