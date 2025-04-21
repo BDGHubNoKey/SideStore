@@ -66,6 +66,7 @@ extension SettingsViewController
     {
         case errorLog
         case clearCache
+        case jitAPISettings
     }
     
     fileprivate enum AdvancedSettingsRow: Int, CaseIterable
@@ -160,7 +161,7 @@ final class SettingsViewController: UITableViewController
     
     private func configureReleaseChannelButton() {
         let currentTrack = UserDefaults.standard.betaUdpatesTrack
-        
+    
         // get all tracks as string available except .stable and .unknown
         var trackOptions: [String] = ReleaseTracks.betaTracks.map {$0.rawValue}
 
@@ -962,6 +963,7 @@ extension SettingsViewController
             {
             case .errorLog: break
             case .clearCache: self.clearCache()
+            case .jitAPISettings: self.configureJITAPISettings()
             }
             
         case .credits:
@@ -1031,7 +1033,7 @@ extension SettingsViewController
                 // For iPad: Set the source view if presenting on iPad to avoid crashes
                 if let popoverController = alertController.popoverPresentationController {
                     popoverController.sourceView = self.view
-                    popoverController.sourceRect = self.view.bounds
+                    popoverController.sourceRect = CGRect(x: self.view.bounds.midX, y: self.view.bounds.midY, width: 0, height: 0)
                 }
                 
                 // Present the action sheet
@@ -1310,5 +1312,58 @@ extension SettingsViewController: INUIAddVoiceShortcutViewControllerDelegate
         }
         
         controller.dismiss(animated: true, completion: nil)
+    }
+}
+
+private extension SettingsViewController
+{
+    func configureJITAPISettings()
+    {
+        let alertController = UIAlertController(title: NSLocalizedString("JIT API Settings", comment: ""),
+                                              message: NSLocalizedString("Enter the URL of the JIT API server.", comment: ""),
+                                              preferredStyle: .alert)
+        
+        alertController.addTextField { textField in
+            textField.placeholder = "https://your-jit-api-server.com"
+            textField.text = UserDefaults.standard.string(forKey: "jit_api_base_url") ?? ""
+            textField.clearButtonMode = .whileEditing
+            textField.keyboardType = .URL
+        }
+        
+        alertController.addAction(UIAlertAction(title: NSLocalizedString("Cancel", comment: ""), style: .cancel) { [weak self] _ in
+            self?.tableView.indexPathForSelectedRow.map { self?.tableView.deselectRow(at: $0, animated: true) }
+        })
+        
+        alertController.addAction(UIAlertAction(title: NSLocalizedString("Save", comment: ""), style: .default) { [weak self] _ in
+            if let textField = alertController.textFields?.first, let text = textField.text, !text.isEmpty {
+                // Save the JIT API URL
+                UserDefaults.standard.set(text, forKey: "jit_api_base_url")
+                
+                // Set the API base URL in the client
+                JITAPIClient.shared.setBaseURL(text)
+                
+                // Show success toast
+                let toast = ToastView(text: "JIT API URL Saved", detailText: text)
+                toast.tintColor = .altPrimary
+                toast.show(in: self!)
+            } else {
+                // Clear the JIT API URL if empty
+                UserDefaults.standard.removeObject(forKey: "jit_api_base_url")
+                
+                // Show warning toast
+                let toast = ToastView(text: "JIT API URL Cleared", detailText: "JIT functionality will be disabled")
+                toast.tintColor = .systemOrange
+                toast.show(in: self!)
+            }
+            
+            self?.tableView.indexPathForSelectedRow.map { self?.tableView.deselectRow(at: $0, animated: true) }
+        })
+        
+        if let popoverController = alertController.popoverPresentationController {
+            popoverController.sourceView = self.view
+            popoverController.sourceRect = CGRect(x: self.view.bounds.midX, y: self.view.bounds.midY, width: 0, height: 0)
+        }
+        
+        self.present(alertController, animated: true)
     }
 }
