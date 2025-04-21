@@ -9,7 +9,16 @@ from datetime import timedelta
 import time
 import threading
 from pymobiledevice3.lockdown import LockdownClient
-from pymobiledevice3.services.debugserver import DebugServerService
+
+# Import our compatibility module instead of the missing module
+try:
+    # Try to import the original module first
+    from pymobiledevice3.services.debugserver import DebugServerService
+    logging.info("Using original pymobiledevice3.services.debugserver module")
+except ImportError:
+    # If it fails, use our compatibility module
+    from flask_backend.pymobiledevice3_compat.debugserver import DebugServerService
+    logging.info("Using compatibility pymobiledevice3_compat.debugserver module")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, 
