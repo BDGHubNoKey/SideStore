@@ -40,6 +40,7 @@ public extension UserDefaults
 
     @NSManaged var recreateDatabaseOnNextStart: Bool
     @NSManaged var isPairingReset: Bool
+    @NSManaged var skipPairingFile: Bool
     @NSManaged var isDebugModeEnabled: Bool
     @NSManaged var presentedLaunchReminderNotification: Bool
     
@@ -139,6 +140,7 @@ public extension UserDefaults
             #keyPath(UserDefaults.isBackgroundRefreshEnabled): true,
             #keyPath(UserDefaults.isIdleTimeoutDisableEnabled): true,
             #keyPath(UserDefaults.isPairingReset): true,
+            #keyPath(UserDefaults.skipPairingFile): false,
             #keyPath(UserDefaults.isLegacyDeactivationSupported): isLegacyDeactivationSupported,
             #keyPath(UserDefaults.activeAppLimitIncludesExtensions): activeAppLimitIncludesExtensions,
             #keyPath(UserDefaults.localServerSupportsRefreshing): localServerSupportsRefreshing,
