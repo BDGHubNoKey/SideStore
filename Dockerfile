@@ -1,10 +1,9 @@
-FROM python:3.10-slim
+FROM python:3.9-slim
 
 WORKDIR /app
 
-# Install system dependencies
+# Install dependencies
 RUN apt-get update && apt-get install -y \
-    build-essential \
     libssl-dev \
     libffi-dev \
     python3-dev \
@@ -15,9 +14,10 @@ RUN apt-get update && apt-get install -y \
 # Copy requirements and install dependencies
 COPY flask_backend/requirements.txt .
 
-# Install pymobiledevice3 directly from GitHub to ensure we get the latest version with all modules
+# Install pymobiledevice3 version 2.30.0 and construct 2.10.69 to ensure JIT functionality works
+# This fixes the "No such command 'start-quic-tunnel'" error in newer versions
 RUN pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir git+https://github.com/doronz88/pymobiledevice3.git
+    pip install --no-cache-dir pymobiledevice3==2.30.0 construct==2.10.69
 
 # Copy application code
 COPY flask_backend/ .
